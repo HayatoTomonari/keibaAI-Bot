@@ -3,6 +3,7 @@ from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 import os
+import pandas as pd
 from dotenv import load_dotenv
 
 # 環境変数を読み込む
@@ -15,6 +16,9 @@ line_bot_api = LineBotApi(LINE_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
 
 app = Flask(__name__)
+
+PREDICTION_DIR = "prediction"
+os.makedirs(PREDICTION_DIR, exist_ok=True)
 
 # Webhook エンドポイント
 @app.route("/callback", methods=["POST"])
@@ -33,14 +37,36 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     user_message = event.message.text.lower()
+    user_id = event.source.user_id
 
     if user_message == "予測":
         # LINE に送信
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="テストでござんす"))
+        send_saved_csv(user_id)
 
     else:
         reply_text = "「予測」と送ると最新のデータを取得できます！"
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
+
+
+def send_saved_csv(user_id):
+    """
+    保存されたCSVを読み込み、LINEに送信する
+    """
+    csv_path = os.path.join(PREDICTION_DIR, "result.csv")
+
+    if not os.path.exists(csv_path):
+        line_bot_api.push_message(user_id, TextSendMessage(text="予測データがありません。"))
+        return
+
+    # CSV を読み込んでテキストに変換
+    df = pd.read_csv(csv_path)
+
+    # 文字数制限があるため、一部のみ送信
+    csv_text = df.head(10).to_string(index=False)  # 上位10行のみ
+    csv_text = csv_text[:4000]  # 文字数制限（4000文字以内）
+
+    # LINE に送信
+    line_bot_api.push_message(user_id, TextSendMessage(text=f"予測結果:\n{csv_text}"))
 
 # サーバー起動
 if __name__ == "__main__":
