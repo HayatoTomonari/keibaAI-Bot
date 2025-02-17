@@ -1,3 +1,4 @@
+import logging
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
@@ -19,6 +20,8 @@ app = Flask(__name__)
 
 PREDICTION_DIR = "prediction"
 os.makedirs(PREDICTION_DIR, exist_ok=True)
+
+logging.basicConfig(level=logging.DEBUG)
 
 # Webhook エンドポイント
 @app.route("/callback", methods=["POST"])
@@ -52,8 +55,8 @@ def send_saved_csv(user_id):
     """
     保存されたCSVを読み込み、LINEに送信する
     """
-    base_dir = os.path.dirname(os.path.abspath(__file__))  # Flask の基準ディレクトリを取得
-    csv_path = os.path.join(base_dir, "prediction", "result.csv")
+    csv_path = os.path.join(PREDICTION_DIR, "result.csv")
+    logging.info(csv_path)
 
     if not os.path.exists(csv_path):
         line_bot_api.push_message(user_id, TextSendMessage(text="予測データがありません。"))
