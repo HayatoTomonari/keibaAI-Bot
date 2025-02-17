@@ -55,10 +55,11 @@ def send_saved_csv(user_id):
     """
     保存されたCSVを読み込み、LINEに送信する
     """
-    csv_path = os.path.join(PREDICTION_DIR, "result.csv")
-    logging.info(csv_path)
+    base_dir = os.path.dirname(os.path.abspath(__file__))  # 現在のスクリプトのディレクトリを取得
+    csv_path = os.path.join(base_dir, "prediction", "result.csv")
 
     if not os.path.exists(csv_path):
+        logging.warning(f"⚠️ CSV ファイルが見つかりません: {csv_path}")
         line_bot_api.push_message(user_id, TextSendMessage(text="予測データがありません。"))
         return
 
