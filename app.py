@@ -18,10 +18,24 @@ os.makedirs(PREDICTION_DIR, exist_ok=True)
 
 logging.basicConfig(level=logging.DEBUG)
 
+def get_user_id():
+    """
+    `LINE_ACCESS_TOKEN` を使って `USER_ID` を取得し、ログに出力
+    """
+    try:
+        profile = line_bot_api.get_profile(os.getenv("ADMIN_LINE_ID"))
+        user_id = profile.user_id
+        logging.info(f"✅ USER_ID を取得しました: {user_id}")
+        return user_id
+    except Exception as e:
+        logging.error(f"❌ USER_ID の取得に失敗: {e}")
+        return None
+
 def send_scheduled_message():
     """
     Job で実行され、LINE に `result.csv` の内容を送信する。
     """
+    user_id = get_user_id()
     if not USER_ID or not USER_ID.startswith("U"):
         logging.error(f"❌ USER_ID が無効です: {USER_ID}")
         return
