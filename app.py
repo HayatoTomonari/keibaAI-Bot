@@ -1,4 +1,6 @@
 import logging
+import shutil
+
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
@@ -55,24 +57,26 @@ def handle_message(event):
 
 
 def send_saved_csv(user_id):
-    """
-    保存されたCSVを読み込み、LINEに送信する
-    """
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    csv_path = os.path.join(base_dir, "prediction", "result.csv")
+    base_dir = os.path.dirname(os.path.abspath(__file__))  # スクリプトの実行ディレクトリ
+    prediction_dir = os.path.join(base_dir, "prediction")
+    csv_path = os.path.join(prediction_dir, "result.csv")
+
+    # ✅ `prediction/` ディレクトリがなければ作成
+    os.makedirs(prediction_dir, exist_ok=True)
+
+    logging.info(f"📂 CSV ファイルの検索パス: {csv_path}")  # ✅ ログで確認
 
     if not os.path.exists(csv_path):
         logging.warning(f"⚠️ CSV ファイルが見つかりません: {csv_path}")
         line_bot_api.push_message(user_id, TextSendMessage(text="予測データがありません。"))
         return
 
-    # CSV を読み込んでテキストに変換
+    logging.info(f"✅ CSV ファイルが見つかりました: {csv_path}")  # ✅ 正しく見つかったかログを確認
+
     df = pd.read_csv(csv_path)
-    csv_text = df.head(10).to_string(index=False)[:4000]  # 上位10行、4000文字制限
+    csv_text = df.head(10).to_string(index=False)[:4000]
 
-    # LINE に送信
     line_bot_api.push_message(user_id, TextSendMessage(text=f"予測結果:\n{csv_text}"))
-
 
 def send_scheduled_message():
     """
@@ -81,6 +85,19 @@ def send_scheduled_message():
     if not USER_ID:
         logging.error("❌ USER_ID が設定されていません！")
         return
+
+    source_csv_path = "/opt/render/project/src/prediction/result.csv"
+    job_csv_path = "/opt/render/project/job/prediction/result.csv"
+
+    # `prediction/` ディレクトリを作成
+    os.makedirs(os.path.dirname(job_csv_path), exist_ok=True)
+
+    # `result.csv` を Job のディレクトリにコピー
+    if os.path.exists(source_csv_path):
+        shutil.copy(source_csv_path, job_csv_path)
+        print(f"✅ CSV ファイルを {job_csv_path} にコピーしました！")
+    else:
+        print(f"⚠️ CSV ファイルが見つかりません: {source_csv_path}")
 
     send_saved_csv(USER_ID)
     logging.info("✅ 定期メッセージを送信しました！")
