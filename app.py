@@ -37,7 +37,7 @@ def send_scheduled_message():
     """
     user_id = get_user_id()
     if not USER_ID or not USER_ID.startswith("U"):
-        logging.error(f"❌ USER_ID が無効です: {USER_ID}")
+        logging.error(f"❌ USER_ID が無効です: {user_id}")
         return
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
