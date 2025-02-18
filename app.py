@@ -26,8 +26,7 @@ def send_scheduled_message():
         logging.error(f"❌ USER_ID が無効です: {USER_ID}")
         return
 
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    csv_path = os.path.join(base_dir, "prediction", "result.csv")
+    csv_path = "/prediction/result.csv"
 
     logging.info(f"📂 CSV ファイルの検索パス: {csv_path}")  # ✅ 確認用ログ
 
