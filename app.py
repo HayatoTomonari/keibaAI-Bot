@@ -44,6 +44,11 @@ def send_scheduled_message():
     # LINE に送信
     line_bot_api.push_message(USER_ID, TextSendMessage(text=f"📊 予測結果:\n{csv_text}"))
 
-# Job 実行
+from flask import Flask
+
+app = Flask(__name__)
+
+PORT = int(os.getenv("PORT", 5000))
+
 if __name__ == "__main__":
-    send_scheduled_message()
+    app.run(host="0.0.0.0", port=PORT)
