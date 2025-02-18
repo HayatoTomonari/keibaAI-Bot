@@ -22,11 +22,15 @@ def send_scheduled_message():
     """
     Job で実行され、LINE に `result.csv` の内容を送信する。
     """
+
+    print("Current Working Directory:", os.getcwd())
+
     if not USER_ID or not USER_ID.startswith("U"):
         logging.error(f"❌ USER_ID が無効です: {USER_ID}")
         return
 
-    csv_path = "/prediction/result.csv"
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    csv_path = os.path.join(base_dir, "prediction", "result.csv")
 
     logging.info(f"📂 CSV ファイルの検索パス: {csv_path}")  # ✅ 確認用ログ
 
